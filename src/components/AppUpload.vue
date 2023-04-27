@@ -19,6 +19,7 @@
 			>
 				<h5>Drop your files here</h5>
 			</div>
+			<input type="file" multiple @change="upload($event)" />
 			<hr class="my-6" />
 			<!-- Progress Bars -->
 			<div class="mb-4" v-for="upload in uploads" :key="upload.name">
@@ -41,7 +42,7 @@
 </template>
 
 <script>
-import { storage } from "../includes/firebase";
+import { storage, auth, songsCollection } from "../includes/firebase";
 
 export default {
 	name: "app-upload",
@@ -55,7 +56,9 @@ export default {
 		upload(e) {
 			this.isDragover = false;
 
-			const files = [...e.dataTransfer.files];
+			const files = e.dataTransfer
+				? [...e.dataTransfer.files]
+				: [...e.target.files];
 
 			files.forEach(file => {
 				if (file.type !== "audio/mpeg") return;
@@ -88,7 +91,19 @@ export default {
 						this.uploads[uploadIndex].textClass = "text-red-400";
 						console.error(err);
 					},
-					() => {
+					async () => {
+						const song = {
+							uid: auth.currentUser.uid,
+							displayName: auth.currentUser.displayName,
+							originalName: task.snapshot.ref.name,
+							modifiedName: task.snapshot.ref.name,
+							genre: "",
+							commentCount: 0,
+						};
+
+						song.url = await task.snapshot.ref.getDownloadURL();
+						await songsCollection.add(song);
+
 						this.uploads[uploadIndex].variant = "bg-green-400";
 						this.uploads[uploadIndex].icon = "fas fa-check";
 						this.uploads[uploadIndex].textClass = "text-green-400";
@@ -96,6 +111,16 @@ export default {
 				);
 			});
 		},
+		// cancelUploads() {
+		//   this.uploads.forEach((upload) => {
+		//     upload.task.cancel()
+		//   })
+		// }
+	},
+	beforeUnmount() {
+		this.uploads.forEach(upload => {
+			upload.task.cancel();
+		});
 	},
 };
 </script>
