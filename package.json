@@ -11,7 +11,9 @@
     "test:e2e:dev": "start-server-and-test 'vite dev --port 4173' http://localhost:4173 'cypress open --e2e'"
   },
   "dependencies": {
+    "@vee-validate/rules": "^4.8.6",
     "pinia": "^2.0.32",
+    "vee-validate": "^4.8.6",
     "vue": "^3.2.47",
     "vue-router": "^4.1.6"
   },
